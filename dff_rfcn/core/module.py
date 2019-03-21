@@ -841,7 +841,7 @@ class MutableModule(BaseModule):
         module = Module(self._symbol, self._data_names, self._label_names, logger=self.logger,
                         context=self._context, work_load_list=self._work_load_list,
                         fixed_param_names=self._fixed_param_names)
-        module.bind([max_data_shapes for _ in xrange(len(self._context))], [max_label_shapes for _ in xrange(len(self._context))],
+        module.bind([max_data_shapes for _ in range(len(self._context))], [max_label_shapes for _ in range(len(self._context))],
                     for_training, inputs_need_grad, force_rebind=False, shared_module=None)
         self._curr_module = module
 
@@ -1020,7 +1020,7 @@ class MutableModule(BaseModule):
         if self._curr_module.label_shapes is not None:
             current_shapes = [dict(self._curr_module.data_shapes[i] + self._curr_module.label_shapes[i]) for i in range(len(self._context))]
         else:
-            current_shapes = [dict(self._curr_module.data_shapes[i]) for i in xrange(len(self._context))]
+            current_shapes = [dict(self._curr_module.data_shapes[i]) for i in range(len(self._context))]
 
         # get input_shapes
         if is_train:

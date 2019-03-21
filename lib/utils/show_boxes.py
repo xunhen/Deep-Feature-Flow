@@ -39,7 +39,7 @@ def draw_boxes(im, dets, classes, scale = 1.0):
         cls_dets = dets[cls_idx]
         for det in cls_dets:
             bbox = det[:4] * scale
-            bbox = map(int, bbox)
+            bbox = list(map(int, bbox))
             color = (random.randint(0, 256), random.randint(0, 256), random.randint(0, 256))
             cv2.rectangle(im, (bbox[0], bbox[1]), (bbox[2], bbox[3]), color=color, thickness=3)
 

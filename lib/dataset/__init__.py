@@ -1,2 +1,2 @@
-from imdb import IMDB
-from imagenet_vid import ImageNetVID
+from lib.dataset.imdb import IMDB
+from lib.dataset.imagenet_vid import ImageNetVID
