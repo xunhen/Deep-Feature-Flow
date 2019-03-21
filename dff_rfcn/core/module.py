@@ -27,7 +27,7 @@ from mxnet.module.base_module import BaseModule, _check_input_names, _parse_data
 from mxnet.model import _create_kvstore, _initialize_kvstore, _update_params, _update_params_on_kvstore, load_checkpoint, BatchEndParam
 from mxnet import metric
 
-from .DataParallelExecutorGroup import DataParallelExecutorGroup
+from DataParallelExecutorGroup import DataParallelExecutorGroup
 from mxnet import ndarray as nd
 from mxnet import optimizer as opt
 

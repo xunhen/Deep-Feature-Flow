@@ -12,9 +12,8 @@
 # --------------------------------------------------------
 
 import numpy as np
-
-from cpu_nms import cpu_nms
-from gpu_nms import gpu_nms
+from nms.cpu_nms import cpu_nms
+from nms.gpu_nms import gpu_nms
 
 def py_nms_wrapper(thresh):
     def _nms(dets):

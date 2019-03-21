@@ -12,7 +12,7 @@
 # --------------------------------------------------------
 
 from multiprocessing.pool import ThreadPool as Pool
-import cPickle
+import pickle as cPickle
 import os
 import time
 import mxnet as mx
@@ -102,8 +102,8 @@ def generate_proposals(predictor, test_data, imdb, cfg, vis=False, thresh=0.):
             if vis:
                 vis_all_detection(data_dict['data'].asnumpy(), [dets], ['obj'], scale, cfg)
 
-            print 'generating %d/%d' % (idx + 1, imdb.num_images), 'proposal %d' % (dets.shape[0]), \
-                'data %.4fs net %.4fs' % (t1, t2 / test_data.batch_size)
+            print('generating %d/%d' % (idx + 1, imdb.num_images), 'proposal %d' % (dets.shape[0]), \
+                'data %.4fs net %.4fs' % (t1, t2 / test_data.batch_size))
             idx += 1
 
 
@@ -123,7 +123,7 @@ def generate_proposals(predictor, test_data, imdb, cfg, vis=False, thresh=0.):
         with open(full_rpn_file, 'wb') as f:
             cPickle.dump(original_boxes, f, cPickle.HIGHEST_PROTOCOL)
 
-    print 'wrote rpn proposals to {}'.format(rpn_file)
+    print('wrote rpn proposals to {}'.format(rpn_file))
     return imdb_boxes
 
 
@@ -173,7 +173,7 @@ def im_batch_detect(predictor, data_batch, data_names, scales, cfg):
         scores = output['cls_prob_reshape_output'].asnumpy()[0]
         bbox_deltas = output['bbox_pred_reshape_output'].asnumpy()[0]
         rois = output['rois_output'].asnumpy()
-        for im_idx in xrange(im_infos.shape[0]):
+        for im_idx in range(im_infos.shape[0]):
             bb_idxs = np.where(rois[:,0] == im_idx)[0]
             im_shape = im_infos[im_idx, :2].astype(np.int)
 
@@ -283,7 +283,7 @@ def pred_eval(gpu_id, key_predictor, cur_predictor, test_data, imdb, cfg, vis=Fa
         data_time += t1
         net_time += t2
         post_time += t3
-        print 'testing {}/{} data {:.4f}s net {:.4f}s post {:.4f}s'.format(idx, num_images, data_time / idx * test_data.batch_size, net_time / idx * test_data.batch_size, post_time / idx * test_data.batch_size)
+        print('testing {}/{} data {:.4f}s net {:.4f}s post {:.4f}s'.format(idx, num_images, data_time / idx * test_data.batch_size, net_time / idx * test_data.batch_size, post_time / idx * test_data.batch_size))
         if logger:
             logger.info('testing {}/{} data {:.4f}s net {:.4f}s post {:.4f}s'.format(idx, num_images, data_time / idx * test_data.batch_size, net_time / idx * test_data.batch_size, post_time / idx * test_data.batch_size))
 

@@ -96,10 +96,10 @@ def main():
     # get predictor
     data_names = ['data', 'im_info']
     label_names = []
-    data = [[mx.nd.array(data[i][name]) for name in data_names] for i in xrange(len(data))]
+    data = [[mx.nd.array(data[i][name]) for name in data_names] for i in range(len(data))]
     max_data_shape = [[('data', (batch_size, 3, max([v[0] for v in config.SCALES]), max([v[1] for v in config.SCALES])))]]
-    provide_data = [[(k, v.shape) for k, v in zip(data_names, data[i])] for i in xrange(len(data))]
-    provide_label = [None for i in xrange(len(data))]
+    provide_data = [[(k, v.shape) for k, v in zip(data_names, data[i])] for i in range(len(data))]
+    provide_label = [None for i in range(len(data))]
     arg_params, aux_params = load_param(cur_path + model, 0, process=True)
     predictor = Predictor(sym, data_names, label_names,
                           context=[mx.gpu(0)], max_data_shapes=max_data_shape,
@@ -108,14 +108,14 @@ def main():
     nms = gpu_nms_wrapper(config.TEST.NMS, 0)
 
     # warm up
-    for j in xrange(1):
+    for j in range(1):
         data_batch = mx.io.DataBatch(data=[data[j]], label=[], pad=0, index=0,
                                      provide_data=[[(k, v.shape) for k, v in zip(data_names, data[j])]],
                                      provide_label=[None])
-        scales = [data_batch.data[i][1].asnumpy()[:, 2] for i in xrange(len(data_batch.data))]
+        scales = [data_batch.data[i][1].asnumpy()[:, 2] for i in range(len(data_batch.data))]
         scores_all, boxes_all, data_dict = im_batch_detect(predictor, data_batch, data_names, scales, config)
 
-    print "warmup done"
+    print("warmup done")
     # test
     time = 0
     count = 0
@@ -123,15 +123,15 @@ def main():
         data_batch = mx.io.DataBatch(data=[data[idx]], label=[], pad=0, index=idx,
                                      provide_data=[[(k, v.shape) for k, v in zip(data_names, data[idx])]],
                                      provide_label=[None])
-        scales = [data_batch.data[i][1].asnumpy()[:, 2] for i in xrange(len(data_batch.data))]
+        scales = [data_batch.data[i][1].asnumpy()[:, 2] for i in range(len(data_batch.data))]
 
         tic()
         scores_all, boxes_all, data_dict = im_batch_detect(predictor, data_batch, data_names, scales, config)
         time += toc()
         count += len(scores_all)
-        print 'testing {} {:.4f}s x {:d}'.format(im_names[0], time/count, len(scores_all))
+        print('testing {} {:.4f}s x {:d}'.format(im_names[0], time/count, len(scores_all)))
 
-        for batch_idx in xrange(len(scores_all)):
+        for batch_idx in range(len(scores_all)):
             boxes = boxes_all[batch_idx].astype('f')
             scores = scores_all[batch_idx].astype('f')
             dets_nms = []
@@ -151,7 +151,7 @@ def main():
             _, filename = os.path.split(im_names[batch_idx])
             cv2.imwrite(output_dir + filename,out_im)
 
-    print 'done'
+    print('done')
 
 if __name__ == '__main__':
     main()

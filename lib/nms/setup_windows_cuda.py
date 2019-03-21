@@ -10,7 +10,8 @@
 import numpy as np
 import os
 # on Windows, we need the original PATH without Anaconda's compiler in it:
-PATH = os.environ.get('PATH') + ';C:\\Program Files (x86)\\Microsoft Visual Studio 14.0\\VC\\bin'
+#C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\Professional\\VC\\Tools\\MSVC\\14.16.27023\\bin\\Hostx64\\x64
+PATH = os.environ.get('PATH') + ';C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\Professional\\VC\\Tools\\MSVC\\14.16.27023\\bin\\Hostx86\\x64'
 from distutils.spawn import spawn, find_executable
 from setuptools import setup, find_packages, Extension
 from setuptools.command.build_ext import build_ext
@@ -18,7 +19,7 @@ import sys
 
 # CUDA specific config
 # nvcc is assumed to be in user's PATH
-nvcc_compile_args = ['-O', '--ptxas-options=-v', '-arch=compute_35', '-code=sm_35,sm_52,sm_61', '-c', '--compiler-options=-fPIC']
+nvcc_compile_args = ['-O', '--ptxas-options=-v', '-arch=compute_75', '-code=sm_75,sm_75,sm_75', '-c', '--compiler-options=-fPIC']
 nvcc_compile_args = os.environ.get('NVCCFLAGS', '').split() + nvcc_compile_args
 cuda_libs = ['cublas']
 nvcc_bin = 'nvcc.exe'
@@ -42,7 +43,7 @@ cudamat_ext = Extension('gpu_nms',
                         language='c++',
                         libraries=cuda_libs,
                         extra_compile_args=nvcc_compile_args,
-                        include_dirs = [numpy_include, 'C:\\Programming\\CUDA\\v8.0\\include'])
+                        include_dirs = [numpy_include, 'C:\\Program Files\\NVIDIA GPU Computing Toolkit\\CUDA\\v10.0\\include'])
 
 
 class CUDA_build_ext(build_ext):

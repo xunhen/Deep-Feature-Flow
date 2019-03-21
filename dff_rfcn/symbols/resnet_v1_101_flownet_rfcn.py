@@ -5,7 +5,7 @@
 # Written by Yuwen Xiong, Xizhou Zhu
 # --------------------------------------------------------
 
-import cPickle
+import pickle as cPickle
 import mxnet as mx
 from utils.symbol import Symbol
 from operator_py.proposal import *
@@ -634,7 +634,7 @@ class resnet_v1_101_flownet_rfcn(Symbol):
 
         # classification
         if cfg.TRAIN.ENABLE_OHEM:
-            print 'use ohem!'
+            print('use ohem!')
             labels_ohem, bbox_weights_ohem = mx.sym.Custom(op_type='BoxAnnotatorOHEM', num_classes=num_classes,
                                                            num_reg_classes=num_reg_classes, roi_per_img=cfg.TRAIN.BATCH_ROIS_OHEM,
                                                            cls_score=cls_score, bbox_pred=bbox_pred, labels=label,

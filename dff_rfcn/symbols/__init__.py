@@ -1,1 +1,1 @@
-import resnet_v1_101_flownet_rfcn
+from dff_rfcn.symbols import resnet_v1_101_flownet_rfcn

@@ -87,11 +87,11 @@ def main():
     # get predictor
     data_names = ['data', 'im_info', 'data_key', 'feat_key']
     label_names = []
-    data = [[mx.nd.array(data[i][name]) for name in data_names] for i in xrange(len(data))]
+    data = [[mx.nd.array(data[i][name]) for name in data_names] for i in range(len(data))]
     max_data_shape = [[('data', (1, 3, max([v[0] for v in config.SCALES]), max([v[1] for v in config.SCALES]))),
                        ('data_key', (1, 3, max([v[0] for v in config.SCALES]), max([v[1] for v in config.SCALES]))),]]
-    provide_data = [[(k, v.shape) for k, v in zip(data_names, data[i])] for i in xrange(len(data))]
-    provide_label = [None for i in xrange(len(data))]
+    provide_data = [[(k, v.shape) for k, v in zip(data_names, data[i])] for i in range(len(data))]
+    provide_label = [None for i in range(len(data))]
     arg_params, aux_params = load_param(cur_path + model, 0, process=True)
     key_predictor = Predictor(key_sym, data_names, label_names,
                           context=[mx.gpu(0)], max_data_shapes=max_data_shape,
@@ -104,11 +104,11 @@ def main():
     nms = gpu_nms_wrapper(config.TEST.NMS, 0)
 
     # warm up
-    for j in xrange(2):
+    for j in range(2):
         data_batch = mx.io.DataBatch(data=[data[j]], label=[], pad=0, index=0,
                                      provide_data=[[(k, v.shape) for k, v in zip(data_names, data[j])]],
                                      provide_label=[None])
-        scales = [data_batch.data[i][1].asnumpy()[0, 2] for i in xrange(len(data_batch.data))]
+        scales = [data_batch.data[i][1].asnumpy()[0, 2] for i in range(len(data_batch.data))]
         if j % key_frame_interval == 0:
             scores, boxes, data_dict, feat = im_detect(key_predictor, data_batch, data_names, scales, config)
         else:
@@ -116,7 +116,7 @@ def main():
             data_batch.provide_data[0][-1] = ('feat_key', feat.shape)
             scores, boxes, data_dict, _ = im_detect(cur_predictor, data_batch, data_names, scales, config)
 
-    print "warmup done"
+    print("warmup done")
     # test
     time = 0
     count = 0
@@ -124,7 +124,7 @@ def main():
         data_batch = mx.io.DataBatch(data=[data[idx]], label=[], pad=0, index=idx,
                                      provide_data=[[(k, v.shape) for k, v in zip(data_names, data[idx])]],
                                      provide_label=[None])
-        scales = [data_batch.data[i][1].asnumpy()[0, 2] for i in xrange(len(data_batch.data))]
+        scales = [data_batch.data[i][1].asnumpy()[0, 2] for i in range(len(data_batch.data))]
 
         tic()
         if idx % key_frame_interval == 0:
@@ -135,7 +135,7 @@ def main():
             scores, boxes, data_dict, _ = im_detect(cur_predictor, data_batch, data_names, scales, config)
         time += toc()
         count += 1
-        print 'testing {} {:.4f}s'.format(im_name, time/count)
+        print('testing {} {:.4f}s'.format(im_name, time/count))
 
         boxes = boxes[0].astype('f')
         scores = scores[0].astype('f')
@@ -156,7 +156,7 @@ def main():
         _, filename = os.path.split(im_name)
         cv2.imwrite(output_dir + filename,out_im)
 
-    print 'done'
+    print('done')
 
 if __name__ == '__main__':
     main()
