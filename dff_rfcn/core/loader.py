@@ -125,7 +125,7 @@ class TestLoader(mx.io.DataIter):
                         'im_info': data[0]['im_info'],
                         'data_key': self.data_key,
                         'feat_key': np.zeros((1,self.cfg.network.DFF_FEAT_DIM,1,1))}]
-        self.data = [[mx.nd.array(extend_data[i][name]) for name in self.data_name] for i in xrange(len(data))]
+        self.data = [[mx.nd.array(extend_data[i][name]) for name in self.data_name] for i in range(len(data))]
         self.im_info = im_info
 
 class AnchorLoader(mx.io.DataIter):
@@ -192,11 +192,11 @@ class AnchorLoader(mx.io.DataIter):
 
     @property
     def provide_data(self):
-        return [[(k, v.shape) for k, v in zip(self.data_name, self.data[i])] for i in xrange(len(self.data))]
+        return [[(k, v.shape) for k, v in zip(self.data_name, self.data[i])] for i in range(len(self.data))]
 
     @property
     def provide_label(self):
-        return [[(k, v.shape) for k, v in zip(self.label_name, self.label[i])] for i in xrange(len(self.data))]
+        return [[(k, v.shape) for k, v in zip(self.label_name, self.label[i])] for i in range(len(self.data))]
 
     @property
     def provide_data_single(self):

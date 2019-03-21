@@ -5,8 +5,8 @@
 # Written by Yuwen Xiong
 # --------------------------------------------------------
 
-from load_model import load_checkpoint
-from save_model import save_checkpoint
+from utils.load_model import load_checkpoint
+from utils.save_model import save_checkpoint
 
 
 def combine_model(prefix1, epoch1, prefix2, epoch2, prefix_out, epoch_out):

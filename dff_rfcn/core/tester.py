@@ -44,7 +44,7 @@ class Predictor(object):
 def im_proposal(predictor, data_batch, data_names, scales):
     output_all = predictor.predict(data_batch)
 
-    data_dict_all = [dict(zip(data_names, data_batch.data[i])) for i in xrange(len(data_batch.data))]
+    data_dict_all = [dict(zip(data_names, data_batch.data[i])) for i in range(len(data_batch.data))]
     scores_all = []
     boxes_all = []
 
@@ -130,7 +130,7 @@ def generate_proposals(predictor, test_data, imdb, cfg, vis=False, thresh=0.):
 def im_detect(predictor, data_batch, data_names, scales, cfg):
     output_all = predictor.predict(data_batch)
 
-    data_dict_all = [dict(zip(data_names, data_batch.data[i])) for i in xrange(len(data_batch.data))]
+    data_dict_all = [dict(zip(data_names, data_batch.data[i])) for i in range(len(data_batch.data))]
     scores_all = []
     pred_boxes_all = []
     for output, data_dict, scale in zip(output_all, data_dict_all, scales):
@@ -164,7 +164,7 @@ def im_detect(predictor, data_batch, data_names, scales, cfg):
 def im_batch_detect(predictor, data_batch, data_names, scales, cfg):
     output_all = predictor.predict(data_batch)
 
-    data_dict_all = [dict(zip(data_names, data_batch.data[i])) for i in xrange(len(data_batch.data))]
+    data_dict_all = [dict(zip(data_names, data_batch.data[i])) for i in range(len(data_batch.data))]
     scores_all = []
     pred_boxes_all = []
     for output, data_dict, scale in zip(output_all, data_dict_all, scales):

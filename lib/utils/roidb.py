@@ -24,7 +24,7 @@ def prepare_roidb(imdb, roidb, cfg):
     :param roidb: roidb
     :return: None
     """
-    print 'prepare roidb'
+    print('prepare roidb')
     for i in range(len(roidb)):  # image_index
         roidb[i]['image'] = imdb.image_path_from_index(imdb.image_set_index[i])
         if cfg.TRAIN.ASPECT_GROUPING:
