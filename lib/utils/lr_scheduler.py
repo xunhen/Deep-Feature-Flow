@@ -9,6 +9,7 @@
 import logging
 from mxnet.lr_scheduler import LRScheduler
 
+
 class WarmupMultiFactorScheduler(LRScheduler):
     """Reduce learning rate in factor at steps specified in a list
 
@@ -24,11 +25,12 @@ class WarmupMultiFactorScheduler(LRScheduler):
     factor: float
         the factor for reducing the learning rate
     """
-    def __init__(self, step, factor=1, warmup=False, warmup_lr=0, warmup_step=0):
+
+    def __init__(self, step, factor=1, warmup=False, warmup_lr=0, warmup_step=0, sw=None):
         super(WarmupMultiFactorScheduler, self).__init__()
         assert isinstance(step, list) and len(step) >= 1
         for i, _step in enumerate(step):
-            if i != 0 and step[i] <= step[i-1]:
+            if i != 0 and step[i] <= step[i - 1]:
                 raise ValueError("Schedule step must be an increasing integer list")
             if _step < 1:
                 raise ValueError("Schedule step must be greater or equal than 1 round")
@@ -41,6 +43,7 @@ class WarmupMultiFactorScheduler(LRScheduler):
         self.warmup = warmup
         self.warmup_lr = warmup_lr
         self.warmup_step = warmup_step
+        self.sw = sw
 
     def __call__(self, num_update):
         """
@@ -55,7 +58,7 @@ class WarmupMultiFactorScheduler(LRScheduler):
         # NOTE: use while rather than if  (for continuing training via load_epoch)
         if self.warmup and num_update < self.warmup_step:
             return self.warmup_lr
-        while self.cur_step_ind <= len(self.step)-1:
+        while self.cur_step_ind <= len(self.step) - 1:
             if num_update > self.step[self.cur_step_ind]:
                 self.count = self.step[self.cur_step_ind]
                 self.cur_step_ind += 1
@@ -63,5 +66,10 @@ class WarmupMultiFactorScheduler(LRScheduler):
                 logging.info("Update[%d]: Change learning rate to %0.5e",
                              num_update, self.base_lr)
             else:
+                if self.sw:
+                    self.sw.add_scalar('lr', self.base_lr, global_step=num_update)
                 return self.base_lr
+        #problem!!!!
+        if self.sw:
+            self.sw.add_scalar('lr', self.base_lr, global_step=num_update)
         return self.base_lr
