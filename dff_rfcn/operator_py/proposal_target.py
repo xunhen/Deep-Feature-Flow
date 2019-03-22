@@ -20,6 +20,7 @@ import numpy as np
 from distutils.util import strtobool
 from easydict import EasyDict as edict
 import pickle as cPickle
+import json
 
 
 from core.rcnn import sample_rois
@@ -91,7 +92,7 @@ class ProposalTargetProp(mx.operator.CustomOpProp):
         self._num_classes = int(num_classes)
         self._batch_images = int(batch_images)
         self._batch_rois = int(batch_rois)
-        self._cfg = cPickle.loads(cfg)
+        self._cfg = cPickle.loads(eval(cfg))
         self._fg_fraction = float(fg_fraction)
 
     def list_arguments(self):

@@ -11,8 +11,9 @@
 # https://github.com/ijkguo/mx-rcnn/
 # --------------------------------------------------------
 
-import time
 import logging
+import time
+
 import mxnet as mx
 
 
@@ -51,15 +52,59 @@ class Speedometer(object):
             self.tic = time.time()
 
 
+class SummaryMetric(object):
+    def __init__(self, sw, frequent=50,prefix=None):
+        self.frequent = frequent
+        self.sw = sw
+        self.prefix = '' if not prefix else prefix + '/'
+        self.init = False
+        self.tic = 0
+        self.last_count = 0
+
+    def __call__(self, param):
+        """Callback to Show speed."""
+        count = param.nbatch
+        if self.last_count > count:
+            self.init = False
+        self.last_count = count
+
+        if self.init:
+            if count % self.frequent == 0:
+                if param.eval_metric is not None:
+                    name, value = param.eval_metric.get()
+                    for n, v in zip(name, value):
+                        self.sw.add_scalar(n, v, global_step=count)
+        else:
+            self.init = True
+
+
+class SummaryValMetric(object):
+    def __init__(self, sw, prefix=None):
+        self.sw = sw
+        self.prefix = '' if not prefix else prefix + '/'
+
+    def __call__(self, param):
+        """Callback to Show speed."""
+        count = param.epoch
+        if param.eval_metric is not None:
+            name, value = param.eval_metric.get()
+            for n, v in zip(name, value):
+                self.sw.add_scalar(self.prefix + n, v, global_step=count)
+
+
 def do_checkpoint(prefix, means, stds):
     def _callback(iter_no, sym, arg, aux):
         weight = arg['rfcn_bbox_weight']
         bias = arg['rfcn_bbox_bias']
         repeat = bias.shape[0] / means.shape[0]
 
-        arg['rfcn_bbox_weight_test'] = weight * mx.nd.repeat(mx.nd.array(stds), repeats=repeat).reshape((bias.shape[0], 1, 1, 1))
-        arg['rfcn_bbox_bias_test'] = arg['rfcn_bbox_bias'] * mx.nd.repeat(mx.nd.array(stds), repeats=repeat) + mx.nd.repeat(mx.nd.array(means), repeats=repeat)
+        arg['rfcn_bbox_weight_test'] = weight * mx.nd.repeat(mx.nd.array(stds), repeats=repeat).reshape(
+            (bias.shape[0], 1, 1, 1))
+        arg['rfcn_bbox_bias_test'] = arg['rfcn_bbox_bias'] * mx.nd.repeat(mx.nd.array(stds),
+                                                                          repeats=repeat) + mx.nd.repeat(
+            mx.nd.array(means), repeats=repeat)
         mx.model.save_checkpoint(prefix, iter_no + 1, sym, arg, aux)
         arg.pop('rfcn_bbox_weight_test')
         arg.pop('rfcn_bbox_bias_test')
+
     return _callback

@@ -2,7 +2,7 @@
 MXNET_VERSION: "mxnet"
 output_path: "./output/dff_rfcn/imagenet_vid"
 symbol: resnet_v1_101_flownet_rfcn
-gpus: '0'
+gpus: '0,1,2,3'
 CLASS_AGNOSTIC: true
 SCALES:
 - 600
@@ -11,8 +11,8 @@ default:
   frequent: 100
   kvstore: device
 network:
-  pretrained: "../../model/pretrained_model/resnet_v1_101"
-  pretrained_flow: "../../model/pretrained_model/flownet"
+  pretrained: "./model/pretrained_model/resnet_v1_101"
+  pretrained_flow: "./model/pretrained_model/flownet"
   pretrained_epoch: 0
   PIXEL_MEANS:
   - 103.06
@@ -51,9 +51,9 @@ network:
 dataset:
   NUM_CLASSES: 31
   dataset: ImageNetVID
-  dataset_path: "E:\\DataSet\\ImageNetVID\\ILSVRC2015"
-  image_set: VID_train_15frames
-  root_path: "E:\\DataSet\\ImageNetVID"
+  dataset_path: "./data/ILSVRC2015"
+  image_set: DET_train_30classes+VID_train_15frames
+  root_path: "./data"
   test_image_set: VID_val_videos
   proposal: rpn
 TRAIN:

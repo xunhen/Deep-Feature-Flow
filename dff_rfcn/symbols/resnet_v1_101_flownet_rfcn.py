@@ -13,6 +13,7 @@ from operator_py.proposal_target import *
 from operator_py.box_annotator_ohem import *
 from operator_py.rpn_inv_normalize import *
 from operator_py.tile_as import *
+import json
 
 class resnet_v1_101_flownet_rfcn(Symbol):
 
@@ -610,6 +611,8 @@ class resnet_v1_101_flownet_rfcn(Symbol):
 
          # ROI proposal target
         gt_boxes_reshape = mx.sym.Reshape(data=gt_boxes, shape=(-1, 5), name='gt_boxes_reshape')
+        #how to recovery the byte after str(byte)?
+
         rois, label, bbox_target, bbox_weight = mx.sym.Custom(rois=rois, gt_boxes=gt_boxes_reshape,
                                                                   op_type='proposal_target',
                                                                   num_classes=num_reg_classes,

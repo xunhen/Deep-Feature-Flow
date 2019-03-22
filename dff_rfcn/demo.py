@@ -17,6 +17,7 @@ import cv2
 from config.config import config, update_config
 from utils.image import resize, transform
 import numpy as np
+
 # get config
 os.environ['PYTHONUNBUFFERED'] = '1'
 os.environ['MXNET_CUDNN_AUTOTUNE_DEFAULT'] = '0'
@@ -32,13 +33,17 @@ from utils.load_model import load_param
 from utils.show_boxes import show_boxes, draw_boxes
 from utils.tictoc import tic, toc
 from nms.nms import py_nms_wrapper, cpu_nms_wrapper, gpu_nms_wrapper
+from mxboard import SummaryWriter
+
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Show Deep Feature Flow demo')
     args = parser.parse_args()
     return args
 
+
 args = parse_args()
+
 
 def main():
     # get symbol
@@ -48,6 +53,9 @@ def main():
     sym_instance = eval(config.symbol + '.' + config.symbol)()
     key_sym = sym_instance.get_key_test_symbol(config)
     cur_sym = sym_instance.get_cur_test_symbol(config)
+
+    with SummaryWriter(logdir='./logs') as sw:
+        sw.add_graph(mx.sym.Group([key_sym,cur_sym]))
 
     # set up class names
     num_classes = 31
@@ -81,26 +89,26 @@ def main():
         im_info = np.array([[im_tensor.shape[2], im_tensor.shape[3], im_scale]], dtype=np.float32)
         if idx % key_frame_interval == 0:
             key_im_tensor = im_tensor
-        data.append({'data': im_tensor, 'im_info': im_info, 'data_key': key_im_tensor, 'feat_key': np.zeros((1,config.network.DFF_FEAT_DIM,1,1))})
-
+        data.append({'data': im_tensor, 'im_info': im_info, 'data_key': key_im_tensor,
+                     'feat_key': np.zeros((1, config.network.DFF_FEAT_DIM, 1, 1))})
 
     # get predictor
     data_names = ['data', 'im_info', 'data_key', 'feat_key']
     label_names = []
     data = [[mx.nd.array(data[i][name]) for name in data_names] for i in range(len(data))]
     max_data_shape = [[('data', (1, 3, max([v[0] for v in config.SCALES]), max([v[1] for v in config.SCALES]))),
-                       ('data_key', (1, 3, max([v[0] for v in config.SCALES]), max([v[1] for v in config.SCALES]))),]]
+                       ('data_key', (1, 3, max([v[0] for v in config.SCALES]), max([v[1] for v in config.SCALES]))), ]]
     provide_data = [[(k, v.shape) for k, v in zip(data_names, data[i])] for i in range(len(data))]
     provide_label = [None for i in range(len(data))]
     arg_params, aux_params = load_param(cur_path + model, 0, process=True)
     key_predictor = Predictor(key_sym, data_names, label_names,
-                          context=[mx.gpu(0)], max_data_shapes=max_data_shape,
-                          provide_data=provide_data, provide_label=provide_label,
-                          arg_params=arg_params, aux_params=aux_params)
+                              context=[mx.gpu(0)], max_data_shapes=max_data_shape,
+                              provide_data=provide_data, provide_label=provide_label,
+                              arg_params=arg_params, aux_params=aux_params)
     cur_predictor = Predictor(cur_sym, data_names, label_names,
-                          context=[mx.gpu(0)], max_data_shapes=max_data_shape,
-                          provide_data=provide_data, provide_label=provide_label,
-                          arg_params=arg_params, aux_params=aux_params)
+                              context=[mx.gpu(0)], max_data_shapes=max_data_shape,
+                              provide_data=provide_data, provide_label=provide_label,
+                              arg_params=arg_params, aux_params=aux_params)
     nms = gpu_nms_wrapper(config.TEST.NMS, 0)
 
     # warm up
@@ -133,9 +141,10 @@ def main():
             data_batch.data[0][-1] = feat
             data_batch.provide_data[0][-1] = ('feat_key', feat.shape)
             scores, boxes, data_dict, _ = im_detect(cur_predictor, data_batch, data_names, scales, config)
-        time += toc()
+        cur_time = toc()
+        time += cur_time
         count += 1
-        print('testing {} {:.4f}s'.format(im_name, time/count))
+        print('testing {} {:.4f}s aver is{:.4f}s'.format(im_name, cur_time, time / count))
 
         boxes = boxes[0].astype('f')
         scores = scores[0].astype('f')
@@ -154,9 +163,10 @@ def main():
         # show_boxes(im, dets_nms, classes, 1)
         out_im = draw_boxes(im, dets_nms, classes, 1)
         _, filename = os.path.split(im_name)
-        cv2.imwrite(output_dir + filename,out_im)
+        cv2.imwrite(output_dir + filename, out_im)
 
     print('done')
+
 
 if __name__ == '__main__':
     main()
