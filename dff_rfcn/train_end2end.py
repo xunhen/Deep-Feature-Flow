@@ -147,7 +147,7 @@ def train_net(args, ctx, pretrained, pretrained_flow, epoch, prefix, begin_epoch
     for child_metric in [rpn_eval_metric, rpn_cls_metric, rpn_bbox_metric, eval_metric, cls_metric, bbox_metric]:
         eval_metrics.add(child_metric)
     # callback
-    batch_end_callback = [callback.Speedometer(train_data.batch_size, frequent=args.frequent),
+    batch_end_callback = [callback.Speedometer(train_data.batch_size, frequent=args.frequent, sw=sw),
                           callback.SummaryMetric(sw, frequent=args.frequent, prefix='train')]
     eval_end_callback = callback.SummaryValMetric(sw, prefix='val')
     means = np.tile(np.array(config.TRAIN.BBOX_MEANS), 2 if config.CLASS_AGNOSTIC else config.dataset.NUM_CLASSES)

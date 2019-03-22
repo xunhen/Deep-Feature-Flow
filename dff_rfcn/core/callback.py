@@ -18,9 +18,10 @@ import mxnet as mx
 
 
 class Speedometer(object):
-    def __init__(self, batch_size, frequent=50):
+    def __init__(self, batch_size, frequent=50, sw=None):
         self.batch_size = batch_size
         self.frequent = frequent
+        self.sw = sw
         self.init = False
         self.tic = 0
         self.last_count = 0
@@ -39,6 +40,8 @@ class Speedometer(object):
                 if param.eval_metric is not None:
                     name, value = param.eval_metric.get()
                     s = "Epoch[%d] Batch [%d]\tSpeed: %.2f samples/sec\tTrain-" % (param.epoch, count, speed)
+                    if self.sw:
+                        self.sw.add_scalar('speed', speed, global_step=param.nbatch)
                     for n, v in zip(name, value):
                         s += "%s=%f,\t" % (n, v)
                 else:
@@ -53,7 +56,7 @@ class Speedometer(object):
 
 
 class SummaryMetric(object):
-    def __init__(self, sw, frequent=50,prefix=None):
+    def __init__(self, sw, frequent=50, prefix=None):
         self.frequent = frequent
         self.sw = sw
         self.prefix = '' if not prefix else prefix + '/'
@@ -73,7 +76,7 @@ class SummaryMetric(object):
                 if param.eval_metric is not None:
                     name, value = param.eval_metric.get()
                     for n, v in zip(name, value):
-                        self.sw.add_scalar(n, v, global_step=count)
+                        self.sw.add_scalar(self.prefix + n, v, global_step=count)
         else:
             self.init = True
 
