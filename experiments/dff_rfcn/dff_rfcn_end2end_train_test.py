@@ -14,6 +14,7 @@ this_dir = os.path.dirname(__file__)
 sys.path.insert(0, os.path.join(this_dir, '..', '..', 'dff_rfcn'))
 
 import train_end2end
+import train_eval_end2end
 import test
 
 if __name__ == "__main__":

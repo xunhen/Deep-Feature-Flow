@@ -51,6 +51,7 @@ config.network.DFF_FEAT_DIM = 1024
 config.dataset = edict()
 config.dataset.dataset = 'ImageNetVID'
 config.dataset.image_set = 'DET_train_30classes+VID_train_15frames'
+config.dataset.val_image_set = 'VID_val_videos'
 config.dataset.test_image_set = 'VID_val_videos'
 config.dataset.root_path = './data'
 config.dataset.dataset_path = './data/ILSVRC2015'
@@ -135,6 +136,7 @@ config.TEST.HAS_RPN = False
 # size of images for each device
 config.TEST.BATCH_IMAGES = 1
 
+config.TEST.EVAL_NUM_BATCH=1000
 # RPN proposal
 config.TEST.CXX_PROPOSAL = True
 config.TEST.RPN_NMS_THRESH = 0.7

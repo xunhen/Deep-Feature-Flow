@@ -787,13 +787,13 @@ class MutableModule(BaseModule):
         return self._curr_module.get_params()
 
     def init_params(self, initializer=Uniform(0.01), arg_params=None, aux_params=None,
-                    allow_missing=False, force_init=False):
+                    allow_missing=False, force_init=False, allow_extra=False):
         if self.params_initialized and not force_init:
             return
         assert self.binded, 'call bind before initializing the parameters'
         self._curr_module.init_params(initializer=initializer, arg_params=arg_params,
                                       aux_params=aux_params, allow_missing=allow_missing,
-                                      force_init=force_init)
+                                      force_init=force_init, allow_extra=False)
         self.params_initialized = True
 
     def bind(self, data_shapes, label_shapes=None, for_training=True,
@@ -886,7 +886,7 @@ class MutableModule(BaseModule):
             eval_end_callback=None,
             eval_batch_end_callback=None, initializer=Uniform(0.01),
             arg_params=None, aux_params=None, allow_missing=False,
-            force_rebind=False, force_init=False, begin_epoch=0, num_epoch=None,
+            force_rebind=False, force_init=False, begin_epoch=0, num_epoch=None, eval_num_batch=None,
             validation_metric=None, monitor=None, prefix=None):
         """Train the module parameters.
 
@@ -941,6 +941,8 @@ class MutableModule(BaseModule):
             this value as N+1.
         num_epoch : int
             Number of epochs to run training.
+        eval_num_batch: int
+            Number of batch to run eval
 
         Examples
         --------
@@ -1007,7 +1009,7 @@ class MutableModule(BaseModule):
             # evaluation on validation set
             if eval_data:
                 res = self.score(eval_data, validation_metric,
-                                 score_end_callback=eval_end_callback,
+                                 score_end_callback=eval_end_callback, num_batch=eval_num_batch,
                                  batch_end_callback=eval_batch_end_callback, epoch=epoch)
                 # TODO: pull this into default
                 for name, val in res:
