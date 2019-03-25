@@ -41,7 +41,7 @@ class Speedometer(object):
                     name, value = param.eval_metric.get()
                     s = "Epoch[%d] Batch [%d]\tSpeed: %.2f samples/sec\tTrain-" % (param.epoch, count, speed)
                     if self.sw:
-                        self.sw.add_scalar('speed', speed, global_step=param.nbatch)
+                        self.sw.add_scalar('epoch{}/speed'.format(param.epoch), speed, global_step=param.nbatch)
                     for n, v in zip(name, value):
                         s += "%s=%f,\t" % (n, v)
                 else:
@@ -60,27 +60,17 @@ class SummaryMetric(object):
         self.frequent = frequent
         self.sw = sw
         self.prefix = '' if not prefix else prefix + '/'
-        self.init = False
-        self.tic = 0
-        self.last_count = 0
 
     def __call__(self, param):
         """Callback to Show speed."""
         count = param.nbatch
-        if self.last_count > count:
-            self.init = False
-        self.last_count = count
+        if count % self.frequent == 0:
+            if param.eval_metric is not None:
+                name, value = param.eval_metric.get()
+                for n, v in zip(name, value):
+                    self.sw.add_scalar(self.prefix + "epoch{}/".format(param.epoch) + n, v, global_step=count)
 
-        if self.init:
-            if count % self.frequent == 0:
-                if param.eval_metric is not None:
-                    name, value = param.eval_metric.get()
-                    for n, v in zip(name, value):
-                        self.sw.add_scalar(self.prefix + n, v, global_step=count)
-        else:
-            self.init = True
-
-
+#need change!!!
 class SummaryValMetric(object):
     def __init__(self, sw, prefix=None):
         self.sw = sw
