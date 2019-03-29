@@ -52,7 +52,7 @@ dataset:
   NUM_CLASSES: 31
   dataset: ImageNetVID
   dataset_path: "E:\\DataSet\\ImageNetVID\\ILSVRC2015"
-  image_set: DET_train_30classes+VID_train_15frames
+  image_set: VID_train_15frames
   root_path: "E:\\DataSet\\ImageNetVID"
   test_image_set: VID_val_videos
   proposal: rpn
