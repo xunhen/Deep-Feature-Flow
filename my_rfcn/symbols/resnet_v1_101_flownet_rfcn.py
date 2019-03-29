@@ -1072,10 +1072,11 @@ class resnet_v1_101_flownet_rfcn(Symbol):
         conv_feat = mx.sym.Variable(name="feat_key")
 
         # shared convolutional layers
-        flow, scale_map = self.get_flownet(data_cur, data_key)
+        flow, scale_map,residual_map = self.get_flownet(data_cur, data_key)
         flow_grid = mx.sym.GridGenerator(data=flow, transform_type='warp', name='flow_grid')
         conv_feat = mx.sym.BilinearSampler(data=conv_feat, grid=flow_grid, name='warping_feat')
-        conv_feat = conv_feat * scale_map
+        residual_map = mx.sym.BilinearSampler(data=residual_map, grid=flow_grid, name='warping_residual')
+        conv_feat = scale_map * (conv_feat + residual_map)
         conv_feats = mx.sym.SliceChannel(conv_feat, axis=1, num_outputs=2)
 
         # RPN
