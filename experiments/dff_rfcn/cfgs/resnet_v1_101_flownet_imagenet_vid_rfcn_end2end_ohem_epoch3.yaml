@@ -58,14 +58,13 @@ dataset:
   proposal: rpn
 TRAIN:
   lr: 0.00025
-  iter_size: 4
-  lr_step: '1.333'
+  lr_step: '1.333,2.333'
   warmup: false
-  begin_epoch: 0
-  end_epoch: 2
+  begin_epoch: 3
+  end_epoch: 4
   model_prefix: 'dff_rfcn_vid'
   # whether resume training
-  RESUME: false
+  RESUME: true
   # whether flip image
   FLIP: true
   # whether shuffle image
@@ -142,4 +141,4 @@ TEST:
   RPN_MIN_SIZE: 0
   # RCNN nms
   NMS: 0.3
-  test_epoch: 2
+  test_epoch: 4
