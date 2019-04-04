@@ -129,7 +129,7 @@ def train_net(args, ctx, pretrained, pretrained_flow, epoch, prefix, begin_epoch
     mod = MutableModule(sym, data_names=data_names, label_names=label_names,
                         logger=logger, context=ctx, max_data_shapes=[max_data_shape for _ in range(batch_size)],
                         max_label_shapes=[max_label_shape for _ in range(batch_size)],
-                        fixed_param_prefix=fixed_param_prefix)
+                        fixed_param_prefix=fixed_param_prefix, iter_size=config.TRAIN.iter_size)
 
     if config.TRAIN.RESUME:
         mod._preload_opt_states = '%s-%04d.states' % (prefix, begin_epoch)
@@ -163,7 +163,7 @@ def train_net(args, ctx, pretrained, pretrained_flow, epoch, prefix, begin_epoch
     lr_iters = [int(epoch * len(roidb) / batch_size) for epoch in lr_epoch_diff]
     print('lr', lr, 'lr_epoch_diff', lr_epoch_diff, 'lr_iters', lr_iters)
     lr_scheduler = WarmupMultiFactorScheduler(lr_iters, lr_factor, config.TRAIN.warmup, config.TRAIN.warmup_lr,
-                                              config.TRAIN.warmup_step, sw=sw)
+                                              config.TRAIN.warmup_step, sw=sw) if len(lr_iters) >= 1 else None
     # optimizer
     optimizer_params = {'momentum': config.TRAIN.momentum,
                         'wd': config.TRAIN.wd,

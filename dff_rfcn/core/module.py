@@ -20,6 +20,8 @@ using shared arrays from the initial module binded with maximum shape.
 import time
 import logging
 import warnings
+import copy
+import numpy
 
 from mxnet import context as ctx
 from mxnet.initializer import Uniform, InitDesc
@@ -31,6 +33,7 @@ from mxnet import metric
 from DataParallelExecutorGroup import DataParallelExecutorGroup
 from mxnet import ndarray as nd
 from mxnet import optimizer as opt
+from mxnet import kvstore as kvs
 
 
 class Module(BaseModule):
@@ -567,23 +570,32 @@ class Module(BaseModule):
         assert self.binded and self.params_initialized
         self._exec_group.backward(out_grads=out_grads)
 
-    def update(self):
+    def get_grad_after_backward(self):
+        return self._exec_group.grad_arrays
+
+    def update(self, accumulate_grad=None):
         """Update parameters according to the installed optimizer and the gradients computed
         in the previous forward-backward batch.
         """
         assert self.binded and self.params_initialized and self.optimizer_initialized
-
         self._params_dirty = True
-        if self._update_on_kvstore:
-            _update_params_on_kvstore(self._exec_group.param_arrays,
-                                      self._exec_group.grad_arrays,
-                                      self._kvstore)
-        else:
+        if accumulate_grad:
             _update_params(self._exec_group.param_arrays,
-                           self._exec_group.grad_arrays,
+                           accumulate_grad,
                            updater=self._updater,
                            num_device=len(self._context),
-                           kvstore=self._kvstore)
+                           kvstore=self._kvstore, param_names=self._param_names)
+        else:
+            if self._update_on_kvstore:
+                _update_params_on_kvstore(self._exec_group.param_arrays,
+                                          self._exec_group.grad_arrays,
+                                          self._kvstore)
+            else:
+                _update_params(self._exec_group.param_arrays,
+                               self._exec_group.grad_arrays,
+                               updater=self._updater,
+                               num_device=len(self._context),
+                               kvstore=self._kvstore)
 
     def get_outputs(self, merge_multi_context=True):
         """Get outputs of the previous forward computation.
@@ -733,7 +745,7 @@ class MutableModule(BaseModule):
 
     def __init__(self, symbol, data_names, label_names,
                  logger=logging, context=ctx.cpu(), work_load_list=None,
-                 max_data_shapes=None, max_label_shapes=None, fixed_param_prefix=None):
+                 max_data_shapes=None, max_label_shapes=None, fixed_param_prefix=None, iter_size=1):
         super(MutableModule, self).__init__(logger=logger)
         self._symbol = symbol
         self._data_names = data_names
@@ -745,6 +757,10 @@ class MutableModule(BaseModule):
         self._max_data_shapes = max_data_shapes
         self._max_label_shapes = max_label_shapes
         self._fixed_param_prefix = fixed_param_prefix
+
+        self._iter_size = iter_size
+        self._iter_number = 0
+        self._accumulate_grad = None
 
         fixed_param_names = list()
         if fixed_param_prefix is not None:
@@ -980,12 +996,14 @@ class MutableModule(BaseModule):
                 self.forward_backward(data_batch)
                 self.update()
                 self.update_metric(eval_metric, data_batch.label)
+                if self._iter_size > 1 and self._iter_number != 0:
+                    continue
 
                 if monitor is not None:
                     monitor.toc_print()
 
                 if batch_end_callback is not None:
-                    batch_end_params = BatchEndParam(epoch=epoch, nbatch=nbatch,
+                    batch_end_params = BatchEndParam(epoch=epoch, nbatch=nbatch // self._iter_size,
                                                      eval_metric=eval_metric,
                                                      locals=locals())
                     for callback in _as_list(batch_end_callback):
@@ -1061,7 +1079,26 @@ class MutableModule(BaseModule):
 
     def update(self):
         assert self.binded and self.params_initialized and self.optimizer_initialized
-        self._curr_module.update()
+        if self._iter_size and self._iter_size > 1:
+            if self._iter_number == 0:
+                if self._accumulate_grad is None:
+                    self._accumulate_grad = copy.deepcopy(self._curr_module.get_grad_after_backward())
+                else:
+                    for index in range(len(self._accumulate_grad)):
+                        for i in range(len(self._accumulate_grad[index])):
+                            if self._accumulate_grad[index][i] is not None:
+                                self._accumulate_grad[index][i] -= self._accumulate_grad[index][i]
+            elif self._iter_number < self._iter_size:
+                tmp = self._curr_module.get_grad_after_backward()
+                for index in range(len(self._accumulate_grad)):
+                    for i in range(len(tmp[index])):
+                        if self._accumulate_grad[index][i] is not None:
+                            self._accumulate_grad[index][i] += tmp[index][i]
+                        # self._accumulate_grad[index].append(tmp[index][i])
+            self._iter_number += 1
+            if self._iter_number == self._iter_size:
+                self._curr_module.update(self._accumulate_grad)
+            self._iter_number %= self._iter_size
 
     def get_outputs(self, merge_multi_context=True):
         assert self.binded and self.params_initialized

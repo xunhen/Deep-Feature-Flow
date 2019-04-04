@@ -77,6 +77,8 @@ def test_rcnn(cfg, dataset, image_set, root_path, dataset_path,
 
     # load model
     arg_params, aux_params = load_param(prefix, epoch, process=True)
+    # eval the offical weight of param
+    #arg_params, aux_params = load_param(r'..\..\model\rfcn_dff_flownet_vid', 0, process=True)
 
     # create predictor
     key_predictors = [get_predictor(key_sym, key_sym_instance, cfg, arg_params, aux_params, test_datas[i], [ctx[i]]) for i in range(gpu_num)]
