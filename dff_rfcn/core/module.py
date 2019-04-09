@@ -1099,6 +1099,8 @@ class MutableModule(BaseModule):
             if self._iter_number == self._iter_size:
                 self._curr_module.update(self._accumulate_grad)
             self._iter_number %= self._iter_size
+        else:
+            self._curr_module.update()
 
     def get_outputs(self, merge_multi_context=True):
         assert self.binded and self.params_initialized
