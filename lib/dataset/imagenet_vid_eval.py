@@ -33,13 +33,13 @@ def parse_vid_rec(filename, classhash, img_ids, defaultIOUthr=0.5, pixelToleranc
                             float(bbox.find('ymax').text)]
         gt_w = obj_dict['bbox'][2] - obj_dict['bbox'][0] + 1
         gt_h = obj_dict['bbox'][3] - obj_dict['bbox'][1] + 1
-        thr = (gt_w*gt_h)/((gt_w+pixelTolerance)*(gt_h+pixelTolerance))
+        thr = (gt_w * gt_h) / ((gt_w + pixelTolerance) * (gt_h + pixelTolerance))
         obj_dict['thr'] = np.min([thr, defaultIOUthr])
         objects.append(obj_dict)
-    return {'bbox' : np.array([x['bbox'] for x in objects]),
-             'label': np.array([x['label'] for x in objects]),
-             'thr'  : np.array([x['thr'] for x in objects]),
-             'img_ids': img_ids}
+    return {'bbox': np.array([x['bbox'] for x in objects]),
+            'label': np.array([x['label'] for x in objects]),
+            'thr': np.array([x['thr'] for x in objects]),
+            'img_ids': img_ids}
 
 
 def vid_ap(rec, prec):
@@ -78,10 +78,10 @@ def vid_eval(detpath, annopath, imageset_file, classname_map, annocache, ovthres
     :return: rec, prec, ap
     """
     with open(imageset_file, 'r') as f:
-            lines = [x.strip().split(' ') for x in f.readlines()]
+        lines = [x.strip().split(' ') for x in f.readlines()]
     img_basenames = [x[0] for x in lines]
     gt_img_ids = [int(x[1]) for x in lines]
-    classhash = dict(zip(classname_map, range(0,len(classname_map))))
+    classhash = dict(zip(classname_map, range(0, len(classname_map))))
 
     # load annotations from cache
     if not os.path.isfile(annocache):
@@ -105,14 +105,33 @@ def vid_eval(detpath, annopath, imageset_file, classname_map, annocache, ovthres
             npos[x] += 1
 
     # read detections
-    with open(detpath, 'r') as f:
-        lines = f.readlines()
+    # with open(detpath, 'r') as f:
+    #     lines = f.readlines()
 
-    splitlines = [x.strip().split(' ') for x in lines]
-    img_ids = np.array([int(x[0]) for x in splitlines])
-    obj_labels = np.array([int(x[1]) for x in splitlines])
-    obj_confs = np.array([float(x[2]) for x in splitlines])
-    obj_bboxes = np.array([[float(z) for z in x[3:]] for x in splitlines])
+    # splitlines = [x.strip().split(' ') for x in lines]
+    # img_ids = np.array([int(x[0]) for x in splitlines])
+    # obj_labels = np.array([int(x[1]) for x in splitlines])
+    # obj_confs = np.array([float(x[2]) for x in splitlines])
+    # obj_bboxes = np.array([[float(z) for z in x[3:]] for x in splitlines])
+    img_ids = []
+    obj_labels = []
+    obj_confs = []
+    obj_bboxes = []
+    with open(detpath, 'r') as f:
+        for x in f.readlines():
+            x = x.strip().split(' ')
+            img_ids.append(int(x[0]))
+            obj_labels.append(int(x[1]))
+            obj_confs.append(float(x[2]))
+            obj_bboxes.append([float(z) for z in x[3:]])
+    img_ids = np.array(img_ids)
+    obj_labels = np.array(obj_labels)
+    obj_confs = np.array(obj_confs)
+    obj_bboxes = np.array(obj_bboxes)
+    # img_ids = np.array([int(x.strip().split(' ')[0]) for x in lines])
+    # obj_labels = np.array([int(x.strip().split(' ')[1]) for x in lines])
+    # obj_confs = np.array([float(x.strip().split(' ')[2]) for x in lines])
+    # obj_bboxes = np.array([[float(z) for z in x.strip().split(' ')[3:]] for x in lines])
 
     # sort by confidence
     if obj_bboxes.shape[0] > 0:
@@ -122,26 +141,25 @@ def vid_eval(detpath, annopath, imageset_file, classname_map, annocache, ovthres
         obj_confs = obj_confs[sorted_inds]
         obj_bboxes = obj_bboxes[sorted_inds, :]
 
-    num_imgs = max(max(gt_img_ids),max(img_ids)) + 1
+    num_imgs = max(max(gt_img_ids), max(img_ids)) + 1
     obj_labels_cell = [None] * num_imgs
     obj_confs_cell = [None] * num_imgs
     obj_bboxes_cell = [None] * num_imgs
     start_i = 0
     id = img_ids[0]
     for i in range(0, len(img_ids)):
-        if i == len(img_ids)-1 or img_ids[i+1] != id:
-            conf = obj_confs[start_i:i+1]
-            label = obj_labels[start_i:i+1]
-            bbox = obj_bboxes[start_i:i+1, :]
+        if i == len(img_ids) - 1 or img_ids[i + 1] != id:
+            conf = obj_confs[start_i:i + 1]
+            label = obj_labels[start_i:i + 1]
+            bbox = obj_bboxes[start_i:i + 1, :]
             sorted_inds = np.argsort(-conf)
 
             obj_labels_cell[id] = label[sorted_inds]
             obj_confs_cell[id] = conf[sorted_inds]
             obj_bboxes_cell[id] = bbox[sorted_inds, :]
-            if i < len(img_ids)-1:
-                id = img_ids[i+1]
-                start_i = i+1
-
+            if i < len(img_ids) - 1:
+                id = img_ids[i + 1]
+                start_i = i + 1
 
     # go down detections and mark true positives and false positives
     tp_cell = [None] * num_imgs
@@ -162,30 +180,31 @@ def vid_eval(detpath, annopath, imageset_file, classname_map, annocache, ovthres
         tp = np.zeros(num_obj)
         fp = np.zeros(num_obj)
 
-        for j in range(0,num_obj):
+        for j in range(0, num_obj):
             bb = bboxes[j, :]
             ovmax = -1
             kmax = -1
-            for k in range(0,num_gt_obj):
+            for k in range(0, num_gt_obj):
                 if labels[j] != gt_labels[k]:
                     continue
                 if gt_detected[k] > 0:
                     continue
                 bbgt = gt_bboxes[k, :]
-                bi=[np.max((bb[0],bbgt[0])), np.max((bb[1],bbgt[1])), np.min((bb[2],bbgt[2])), np.min((bb[3],bbgt[3]))]
-                iw=bi[2]-bi[0]+1
-                ih=bi[3]-bi[1]+1
-                if iw>0 and ih>0:            
+                bi = [np.max((bb[0], bbgt[0])), np.max((bb[1], bbgt[1])), np.min((bb[2], bbgt[2])),
+                      np.min((bb[3], bbgt[3]))]
+                iw = bi[2] - bi[0] + 1
+                ih = bi[3] - bi[1] + 1
+                if iw > 0 and ih > 0:
                     # compute overlap as area of intersection / area of union
                     ua = (bb[2] - bb[0] + 1.) * (bb[3] - bb[1] + 1.) + \
-                           (bbgt[2] - bbgt[0] + 1.) * \
-                           (bbgt[3] - bbgt[1] + 1.) - iw*ih
-                    ov=iw*ih/ua
+                         (bbgt[2] - bbgt[0] + 1.) * \
+                         (bbgt[3] - bbgt[1] + 1.) - iw * ih
+                    ov = iw * ih / ua
                     # makes sure that this object is detected according
                     # to its individual threshold
                     if ov >= gt_thr[k] and ov > ovmax:
-                        ovmax=ov
-                        kmax=k
+                        ovmax = ov
+                        kmax = k
             if kmax >= 0:
                 tp[j] = 1
                 gt_detected[kmax] = 1
